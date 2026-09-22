@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{デッキタイトル}} · スライド・ストーリーボード</title>
+<style>
+  :root{
+    --paper:#f7f5f2;
+    --card:#ffffff;
+    --ink:#232323;
+    --muted:#6b6b6b;
+    --line:#dcd7cf;
+    --accent:#c65d33;
+    --accent-tint:#fdf3ec;
+  }
+  *, *::before, *::after{ box-sizing:border-box; }
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Noto Sans JP','Hiragino Sans',sans-serif;
+    padding:2.5rem clamp(1rem, 4vw, 3rem);
+  }
+  h1{ font-weight:700; font-size:1.6rem; margin:0 0 0.35rem; }
+  .deck-sub{ color:var(--muted); margin:0 0 2rem; font-size:0.9rem; }
+  .deck-sub code{
+    background:var(--card); border:1px solid var(--line); border-radius:4px;
+    padding:0.1rem 0.4rem; font-family:'Ubuntu Mono',monospace;
+  }
+
+  .slide-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:1.5rem;
+    margin-bottom:2rem;
+    display:grid;
+    grid-template-columns:300px 1fr;
+    gap:1.75rem;
+  }
+  @media (max-width: 760px){
+    .slide-card{ grid-template-columns:1fr; }
+  }
+
+  .slide-no{
+    display:inline-block;
+    background:var(--ink);
+    color:#fff;
+    font-size:0.7rem;
+    font-family:'Ubuntu Mono',monospace;
+    padding:2px 10px;
+    border-radius:999px;
+    margin-bottom:0.6rem;
+    letter-spacing:0.04em;
+  }
+  .slide-title{ font-size:1.2rem; font-weight:700; margin:0.2rem 0 0.9rem; }
+
+  .key-message{
+    background:var(--accent-tint);
+    border-left:3px solid var(--accent);
+    padding:0.7rem 1rem;
+    font-size:0.92rem;
+    line-height:1.75;
+    margin-bottom:1.1rem;
+    border-radius:0 4px 4px 0;
+  }
+
+  .field-label{
+    font-size:0.7rem;
+    color:var(--muted);
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    margin:1rem 0 0.3rem;
+  }
+  .field-body{ font-size:0.9rem; line-height:1.75; margin:0; }
+
+  pre.prompt{
+    background:#1e1e1e;
+    color:#e8e6e1;
+    padding:0.9rem 1rem;
+    border-radius:6px;
+    font-family:'Ubuntu Mono',monospace;
+    font-size:0.76rem;
+    white-space:pre-wrap;
+    word-break:break-word;
+    line-height:1.65;
+    margin:0;
+  }
+
+  /* ==================================================================
+     レイアウト・ワイヤーフレーム
+     .wireframe が 16:9 の枠。中に .zone.text / .zone.visual を並べる。
+     並べ方はプリセットごとの .layout-* クラスで切り替える。
+     ================================================================== */
+  .wireframe{
+    aspect-ratio:16/9;
+    border:1px solid var(--line);
+    border-radius:6px;
+    background:#fafaf8;
+    position:relative;
+    display:grid;
+    gap:6px;
+    padding:6px;
+  }
+  .wireframe .zone{
+    border:1px dashed #b7b2a8;
+    border-radius:4px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:0.68rem;
+    color:var(--muted);
+    text-align:center;
+    padding:4px;
+  }
+  .wireframe .zone.visual{ background:#eef1ea; }
+  .wireframe .zone.text{ background:#f5f1ec; }
+  .wireframe-caption{
+    font-size:0.68rem; color:var(--muted); text-align:center; margin-top:0.4rem;
+    font-family:'Ubuntu Mono',monospace;
+  }
+
+  /* left-text-right-visual: 2カラム、テキスト→ビジュアルの順 */
+  .layout-left-text-right-visual{ grid-template-columns:1fr 1fr; }
+
+  /* right-text-left-visual: 2カラム、ビジュアル→テキストの順(HTML側で順序を入れ替える) */
+  .layout-right-text-left-visual{ grid-template-columns:1fr 1fr; }
+
+  /* top-visual-bottom-text: 2行、ビジュアル→テキストの順 */
+  .layout-top-visual-bottom-text{ grid-template-rows:1fr 1fr; }
+
+  /* center-visual-split-text: 3カラム、テキスト・ビジュアル・テキスト */
+  .layout-center-visual-split-text{ grid-template-columns:1fr 1.2fr 1fr; }
+
+  /* full-bleed-visual: ビジュアルが全面、テキストは下に重ねる */
+  .layout-full-bleed-visual{ grid-template-columns:1fr; grid-template-rows:1fr; }
+  .layout-full-bleed-visual .zone.visual{ grid-column:1; grid-row:1; }
+  .layout-full-bleed-visual .zone.text{
+    grid-column:1; grid-row:1; align-self:end; justify-self:stretch;
+    height:34%; background:rgba(245,241,236,0.9);
+  }
+
+  /* text-only: ゾーン1つだけ */
+  .layout-text-only{ grid-template-columns:1fr; }
+</style>
+</head>
+<body>
+
+  <h1>{{デッキタイトル}}</h1>
+  <p class="deck-sub">共通イラストスタイル: <code>{{共通スタイル文字列}}</code></p>
+
+  <!-- ============================================================
+       スライドカード1枚分。手順5でスライドの枚数だけ複製して埋める。
+       下の例は layout-left-text-right-visual のワイヤーフレーム。
+       他プリセットのワイヤーフレームHTMLは、このコメントブロックの下にある
+       「プリセット別 .zone 構成の例」を参照して組み替える。
+       ============================================================ -->
+  <section class="slide-card">
+    <div>
+      <div class="wireframe layout-left-text-right-visual">
+        <div class="zone text">テキスト<br>(タイトル・キーメッセージ)</div>
+        <div class="zone visual">イラスト</div>
+      </div>
+      <p class="wireframe-caption">layout-left-text-right-visual</p>
+    </div>
+    <div>
+      <span class="slide-no">Slide {{番号}}</span>
+      <h2 class="slide-title">{{タイトル}}</h2>
+      <div class="key-message">{{キーメッセージ}}</div>
+
+      <p class="field-label">構図</p>
+      <p class="field-body">{{構図の説明。視覚要素なしのスライドは「なし」}}</p>
+
+      <p class="field-label">画像生成プロンプト / 表・グラフ構成</p>
+      <pre class="prompt">{{英語プロンプト(+共通スタイル文字列) または 表・グラフの行列・軸構成}}</pre>
+
+      <p class="field-label">備考</p>
+      <p class="field-body">{{伝えたいこと・決まっていない事項のメモ}}</p>
+    </div>
+  </section>
+  <!-- ============================================================
+       ここまでを1スライド分として複製する
+       ============================================================ -->
+
+  <!--
+    プリセット別 .zone 構成の例(コピー用。実際の出力には含めない)
+
+    right-text-left-visual:
+      <div class="wireframe layout-right-text-left-visual">
+        <div class="zone visual">イラスト</div>
+        <div class="zone text">テキスト</div>
+      </div>
+
+    top-visual-bottom-text:
+      <div class="wireframe layout-top-visual-bottom-text">
+        <div class="zone visual">イラスト</div>
+        <div class="zone text">テキスト</div>
+      </div>
+
+    center-visual-split-text:
+      <div class="wireframe layout-center-visual-split-text">
+        <div class="zone text">箇条書き</div>
+        <div class="zone visual">イラスト</div>
+        <div class="zone text">箇条書き</div>
+      </div>
+
+    full-bleed-visual:
+      <div class="wireframe layout-full-bleed-visual">
+        <div class="zone visual">イラスト(全面)</div>
+        <div class="zone text">テキスト(下に重ねる)</div>
+      </div>
+
+    text-only:
+      <div class="wireframe layout-text-only">
+        <div class="zone text">テキストのみ</div>
+      </div>
+  -->
+
+</body>
+</html>
