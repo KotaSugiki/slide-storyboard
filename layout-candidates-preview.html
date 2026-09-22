@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>レイアウトプリセット候補プレビュー</title>
+  <style>
+    :root {
+      --paper: #f3f1ec;
+      --card: #fffdf9;
+      --ink: #20252b;
+      --muted: #6e747b;
+      --line: #d9d6ce;
+      --accent: #2d6cdf;
+      --accent-soft: #e9f0ff;
+      --visual: #dce9df;
+      --text: #f4eadc;
+      --data: #dfe5f5;
+      --dark: #25313d;
+      --shadow: 0 8px 24px rgba(34, 39, 46, .07);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: "Noto Sans JP", "Hiragino Sans", system-ui, sans-serif;
+      line-height: 1.5;
+    }
+    .shell { width: min(1500px, calc(100% - 32px)); margin: 0 auto; }
+    header { padding: 32px 0 20px; }
+    h1 { margin: 0; font-size: clamp(1.55rem, 3vw, 2.35rem); letter-spacing: -.03em; }
+    .lead { color: var(--muted); max-width: 850px; margin: 8px 0 0; }
+    .note {
+      margin-top: 18px; padding: 12px 15px; border: 1px solid #c8d6f4;
+      background: var(--accent-soft); border-radius: 10px; color: #30476d; font-size: .9rem;
+    }
+    .toolbar {
+      position: sticky; top: 0; z-index: 10; padding: 12px 0;
+      background: color-mix(in srgb, var(--paper) 92%, transparent);
+      backdrop-filter: blur(12px); border-bottom: 1px solid var(--line);
+    }
+    .toolbar-inner { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    input[type="search"] {
+      min-width: 260px; flex: 1; border: 1px solid var(--line); border-radius: 8px;
+      background: var(--card); padding: 10px 12px; color: var(--ink); font: inherit;
+    }
+    button, .filter {
+      border: 1px solid var(--line); border-radius: 8px; background: var(--card);
+      color: var(--ink); padding: 9px 12px; font: inherit; cursor: pointer;
+    }
+    button:hover, .filter:hover { border-color: var(--accent); }
+    button.primary { color: white; background: var(--accent); border-color: var(--accent); }
+    .count { margin-left: auto; color: var(--muted); font-size: .9rem; white-space: nowrap; }
+    .filters { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 10px; }
+    .filter.active { color: #194aab; background: var(--accent-soft); border-color: #9cb7ed; }
+    main { padding: 24px 0 60px; }
+    .group-title { margin: 30px 0 12px; font-size: 1.15rem; }
+    .group-title:first-child { margin-top: 0; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 16px; }
+    .candidate {
+      display: flex; flex-direction: column; min-width: 0; background: var(--card);
+      border: 1px solid var(--line); border-radius: 13px; box-shadow: var(--shadow); overflow: hidden;
+      transition: border-color .15s, transform .15s, opacity .15s;
+    }
+    .candidate:hover { transform: translateY(-2px); }
+    .candidate.selected { border: 2px solid var(--accent); }
+    .candidate.hidden { display: none; }
+    .candidate-head { padding: 14px 15px 8px; display: flex; gap: 10px; align-items: flex-start; }
+    .pick { width: 19px; height: 19px; accent-color: var(--accent); flex: 0 0 auto; margin-top: 3px; }
+    .candidate-title { min-width: 0; flex: 1; }
+    .candidate-title h3 { margin: 0; font-size: 1rem; line-height: 1.35; }
+    .id { display: block; color: var(--accent); font: .72rem/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; margin-top: 3px; }
+    .tag { flex: 0 0 auto; color: var(--muted); background: #f1f0eb; border-radius: 999px; padding: 3px 8px; font-size: .68rem; }
+    .wireframe-wrap { padding: 4px 15px 0; }
+    .wireframe {
+      position: relative; aspect-ratio: 16 / 9; overflow: hidden; border: 1px solid #c9c6bd;
+      border-radius: 8px; background: #fbfaf6; padding: 8px; display: grid; gap: 5px;
+      font-size: 7px; color: #69716d;
+    }
+    .wireframe::before { content: ""; position: absolute; inset: 4px; border: 1px solid rgba(50, 55, 61, .1); pointer-events: none; }
+    .zone, .mini-card, .node, .metric, .bar, .logo, .pill, .quote, .headline {
+      border: 1px dashed #aaa99f; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+      text-align: center; padding: 3px; min-width: 0; min-height: 0;
+    }
+    .zone.text, .headline, .quote { background: var(--text); }
+    .zone.visual, .node, .logo { background: var(--visual); }
+    .zone.data, .metric, .bar, .mini-card { background: var(--data); }
+    .wireframe .dark { background: var(--dark); color: white; border-color: var(--dark); }
+    .wireframe .accent { background: #cadcff; border-color: #7ea4e9; color: #1c4f9e; }
+    .caption { margin: 7px 0 0; color: var(--muted); font: .7rem ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .body { padding: 0 15px 15px; }
+    .summary { margin: 10px 0 6px; font-size: .87rem; }
+    .use { margin: 0; color: var(--muted); font-size: .78rem; }
+    .ref { display: inline-block; margin-top: 8px; font-size: .74rem; color: #3565b7; text-decoration: none; }
+    .ref:hover { text-decoration: underline; }
+    .selected-panel {
+      display: none; margin: 20px 0 0; padding: 14px 16px; background: var(--card);
+      border: 1px solid var(--accent); border-radius: 10px;
+    }
+    .selected-panel.show { display: block; }
+    .selected-panel strong { color: var(--accent); }
+    #selectedList { margin: 8px 0 0; padding-left: 20px; columns: 2; }
+    @media (max-width: 700px) {
+      .shell { width: min(100% - 20px, 1500px); }
+      .grid { grid-template-columns: 1fr; }
+      .count { width: 100%; margin-left: 0; }
+      #selectedList { columns: 1; }
+    }
+
+    /* Each preview below is intentionally schematic: it shows zone relationships, not final styling. */
+    .agenda { grid-template-columns: repeat(4, 1fr); align-items: center; }
+    .agenda .node { height: 38%; position: relative; }
+    .agenda .node:not(:last-child)::after { content: "→"; position: absolute; right: -12px; color: var(--accent); font-size: 13px; }
+    .kpi { grid-template-columns: repeat(4, 1fr); grid-template-rows: 30% 1fr; }
+    .kpi .headline { grid-column: 1 / -1; }
+    .big-number { grid-template-columns: 1fr 1fr; align-items: center; }
+    .big-number .metric { grid-row: 1 / 3; font-size: 26px; font-weight: 800; color: #2d6cdf; }
+    .statement { grid-template-rows: 1fr 38%; }
+    .statement .headline { font-size: 14px; font-weight: 700; }
+    .statement .evidence { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+    .section { grid-template-columns: 38% 1fr; align-items: center; }
+    .section .number { font-size: 42px; font-weight: 800; color: var(--accent); text-align: center; }
+    .section .list { display: grid; gap: 5px; }
+    .before { grid-template-columns: 1fr 1fr; grid-template-rows: 24% repeat(3, 1fr); }
+    .before .head { background: #ece8df; border-radius: 4px; display: flex; justify-content: center; align-items: center; }
+    .matrix { grid-template-columns: 30% repeat(3, 1fr); grid-template-rows: 24% repeat(3, 1fr); }
+    .matrix .corner { background: transparent; border: 0; }
+    .score { grid-template-columns: 1fr 1fr 28%; grid-template-rows: 23% repeat(3, 1fr); }
+    .score .verdict { grid-row: 1 / -1; background: #d7ecd9; }
+    .quad { grid-template-columns: 20px 1fr; grid-template-rows: 1fr 20px; }
+    .quad .plot { position: relative; border-left: 1px solid #69716d; border-bottom: 1px solid #69716d; }
+    .dot { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: #2d6cdf; }
+    .dot.a { left: 25%; bottom: 30%; } .dot.b { left: 62%; bottom: 63%; } .dot.c { left: 76%; bottom: 20%; }
+    .landscape { grid-template-columns: 18px 1fr; grid-template-rows: 1fr 18px; }
+    .landscape .plot { position: relative; border-left: 1px solid #69716d; border-bottom: 1px solid #69716d; }
+    .bubble { position: absolute; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: #cfe0ff; border: 1px solid #7ea4e9; font-size: 6px; }
+    .bubble.a { left: 18%; bottom: 57%; } .bubble.b { left: 55%; bottom: 25%; width: 40px; height: 40px; } .bubble.c { left: 72%; bottom: 70%; width: 23px; height: 23px; }
+    .timeline-h { grid-template-rows: 1fr 14%; align-items: center; }
+    .timeline-h .track { display: grid; grid-template-columns: repeat(5, 1fr); border-top: 2px solid var(--accent); align-items: center; }
+    .timeline-h .track span { width: 11px; height: 11px; border-radius: 50%; background: var(--accent); margin: -6px auto 0; box-shadow: 0 0 0 3px #e9f0ff; }
+    .timeline-h .labels { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+    .timeline-v { grid-template-columns: 18% 1fr; grid-template-rows: repeat(4, 1fr); }
+    .timeline-v .spine { grid-row: 1 / -1; border-right: 2px solid var(--accent); }
+    .timeline-v .vitem { position: relative; margin-left: 7px; }
+    .timeline-v .vitem::before { content: ""; position: absolute; left: -14px; top: 42%; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+    .chevrons { display: flex; align-items: center; gap: 2px; }
+    .chevrons .step { flex: 1; height: 55%; background: #d5e2ff; clip-path: polygon(0 0, 86% 0, 100% 50%, 86% 100%, 0 100%, 14% 50%); display: flex; align-items: center; justify-content: center; padding: 2px; }
+    .lanes { grid-template-columns: 24% 1fr; grid-template-rows: 24% repeat(3, 1fr); }
+    .lanes .bars { display: grid; gap: 5px; padding: 3px 0; }
+    .lanes .bar { justify-content: flex-start; background: #bed5c2; }
+    .lanes .bar:nth-child(2) { margin-left: 28%; background: #ccdafa; } .lanes .bar:nth-child(3) { margin-left: 52%; background: #f0d9bd; }
+    .zigzag { position: relative; }
+    .zigzag .route { position: absolute; inset: 24% 12%; border: 2px solid var(--accent); border-radius: 9px; clip-path: polygon(0 0, 30% 0, 30% 100%, 65% 100%, 65% 0, 100% 0, 100% 15%, 78% 15%, 78% 100%, 17% 100%, 17% 15%, 0 15%); }
+    .zigzag .steps { position: absolute; inset: 12% 8%; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); gap: 6px; }
+    .zigzag .steps .zone:nth-child(2) { grid-column: 3; } .zigzag .steps .zone:nth-child(3) { grid-column: 2; grid-row: 2; } .zigzag .steps .zone:nth-child(4) { grid-column: 1; grid-row: 2; }
+    .cycle { display: flex; align-items: center; justify-content: center; }
+    .cycle .ring { width: 65%; aspect-ratio: 1; border: 10px solid #cadcff; border-right-color: var(--accent); border-radius: 50%; display: grid; place-items: center; }
+    .cycle .center { width: 33%; aspect-ratio: 1; border-radius: 50%; background: var(--text); display: grid; place-items: center; text-align: center; }
+    .pillars { grid-template-columns: repeat(3, 1fr); align-items: end; }
+    .pillars .pillar { height: 68%; display: grid; grid-template-rows: 25% 1fr 25%; gap: 4px; }
+    .pillars .pillar:nth-child(2) { height: 83%; } .pillars .pillar:nth-child(3) { height: 74%; }
+    .bento { grid-template-columns: 1.3fr 1fr 1fr; grid-template-rows: 1fr 1fr; }
+    .bento .big { grid-row: 1 / 3; } .bento .wide { grid-column: 2 / 4; }
+    .hub { display: flex; align-items: center; justify-content: center; }
+    .hub .center-node { width: 30%; aspect-ratio: 1; border-radius: 50%; background: #cadcff; display: grid; place-items: center; z-index: 2; text-align: center; }
+    .hub .spokes { position: absolute; inset: 10%; display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); gap: 4px; }
+    .hub .spokes .node:nth-child(1) { align-self: start; } .hub .spokes .node:nth-child(2) { justify-self: end; } .hub .spokes .node:nth-child(3) { align-self: end; } .hub .spokes .node:nth-child(4) { justify-self: end; align-self: end; }
+    .radial { display: flex; align-items: center; justify-content: center; }
+    .radial .center-node { width: 27%; aspect-ratio: 1; border-radius: 50%; background: #cadcff; display: grid; place-items: center; z-index: 2; text-align: center; }
+    .radial .facets { position: absolute; inset: 10%; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 3px; }
+    .radial .facets .node:nth-child(1) { grid-column: 2; } .radial .facets .node:nth-child(2) { grid-column: 1; grid-row: 2; } .radial .facets .node:nth-child(3) { grid-column: 3; grid-row: 2; } .radial .facets .node:nth-child(4) { grid-column: 2; grid-row: 3; }
+    .tree { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 28% 1fr; gap: 8px; align-items: center; }
+    .tree .root { grid-column: 2; } .tree .branch { grid-row: 2; display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+    .hierarchy { grid-template-rows: 28% 1fr 1fr; align-items: center; }
+    .hierarchy .level { display: flex; justify-content: center; gap: 10px; } .hierarchy .level .node { width: 26%; }
+    .venn { display: flex; align-items: center; justify-content: center; }
+    .venn .circle { width: 36%; aspect-ratio: 1; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: -8px; background: rgba(164, 202, 238, .6); border: 1px solid #7ea4e9; }
+    .venn .circle:nth-child(2) { background: rgba(213, 188, 239, .6); } .venn .circle:nth-child(3) { background: rgba(192, 229, 190, .6); }
+    .rings { display: grid; place-items: center; }
+    .rings .ring { border: 1px solid #7ea4e9; border-radius: 50%; display: grid; place-items: center; text-align: center; }
+    .rings .r1 { width: 70%; aspect-ratio: 1; background: rgba(207, 224, 255, .35); } .rings .r2 { width: 68%; aspect-ratio: 1; background: rgba(207, 224, 255, .55); } .rings .r3 { width: 64%; aspect-ratio: 1; background: rgba(207, 224, 255, .8); }
+    .pyramid { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+    .pyramid .level { height: 20%; background: #cadcff; border: 1px dashed #7ea4e9; display: flex; align-items: center; justify-content: center; }
+    .pyramid .level:nth-child(1) { width: 30%; } .pyramid .level:nth-child(2) { width: 50%; } .pyramid .level:nth-child(3) { width: 70%; } .pyramid .level:nth-child(4) { width: 90%; }
+    .funnel { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+    .funnel .stage { height: 20%; background: #d5e2ff; clip-path: polygon(10% 0, 90% 0, 78% 100%, 22% 100%); display: flex; align-items: center; justify-content: center; }
+    .funnel .stage:nth-child(1) { width: 88%; } .funnel .stage:nth-child(2) { width: 70%; } .funnel .stage:nth-child(3) { width: 53%; } .funnel .stage:nth-child(4) { width: 35%; }
+    .waterfall { display: flex; align-items: end; justify-content: center; gap: 4px; padding: 16% 8% 8%; }
+    .waterfall .bar { width: 12%; border-radius: 3px 3px 0 0; } .waterfall .up { height: 45%; background: #bddcbc; } .waterfall .down { height: 27%; background: #ecc9ba; align-self: center; } .waterfall .total { height: 70%; background: #cadcff; }
+    .chart { grid-template-rows: 25% 1fr 16%; }
+    .chart .plot { border-left: 1px solid #888; border-bottom: 1px solid #888; position: relative; }
+    .chart .line { position: absolute; inset: 25% 10% 25%; border-top: 2px solid var(--accent); transform: skewY(-12deg); }
+    .map { position: relative; }
+    .map .land { position: absolute; inset: 22% 24%; background: #d9e8dc; clip-path: polygon(10% 35%, 24% 15%, 43% 25%, 52% 7%, 78% 20%, 90% 48%, 71% 55%, 79% 84%, 53% 74%, 36% 93%, 25% 67%, 5% 72%); }
+    .map .callout { position: absolute; background: #cadcff; border: 1px solid #7ea4e9; border-radius: 4px; padding: 3px 5px; } .map .c1 { left: 8%; top: 20%; } .map .c2 { right: 7%; bottom: 20%; } .map .c3 { right: 13%; top: 17%; }
+    .thirds { grid-template-columns: 2fr 1fr; gap: 7px; } .thirds .zone.visual { grid-row: 1 / 3; } .thirds .zone.text { align-self: end; }
+    .diagonal { display: grid; grid-template-columns: 1fr 1fr; position: relative; padding: 0; } .diagonal::after { content: ""; position: absolute; inset: 0; background: var(--text); clip-path: polygon(48% 0, 100% 0, 100% 100%, 0 100%); z-index: 0; } .diagonal .zone { z-index: 1; border: 0; background: transparent; }
+    .collage { position: relative; } .collage .photo { position: absolute; width: 46%; height: 66%; background: var(--visual); border: 1px dashed #aaa99f; border-radius: 5px; } .collage .p1 { left: 9%; top: 14%; transform: rotate(-7deg); } .collage .p2 { right: 9%; top: 11%; transform: rotate(6deg); } .collage .quote { position: absolute; width: 64%; height: 34%; left: 18%; bottom: 12%; z-index: 2; background: #fff8ed; }
+    .team { grid-template-columns: 1fr 1.1fr; } .team .faces { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; } .team .caption { display: grid; gap: 4px; margin: 0; }
+    .case { grid-template-columns: repeat(3, 1fr); align-items: center; } .case .arrow { font-size: 18px; color: var(--accent); text-align: center; } .case .result { background: #d7ecd9; }
+    .logos { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 1fr) 25%; gap: 5px; } .logos .label { grid-column: 1 / -1; background: var(--text); border-radius: 4px; display: grid; place-items: center; }
+    .magazine { grid-template-columns: 1.5fr .6fr; grid-template-rows: 25% 1fr 18%; gap: 6px; } .magazine .hero { grid-column: 1 / -1; } .magazine .story { grid-row: 2 / 4; } .magazine .sidebar { grid-row: 2 / 4; background: #f1d8d2; }
+
+    /* Training-material-specific layouts */
+    .objective { grid-template-columns: 1.1fr 1fr; grid-template-rows: 25% 1fr 25%; }
+    .objective .headline { grid-column: 1 / -1; } .objective .activity { grid-column: 1 / -1; background: #d7ecd9; border: 1px dashed #99b89d; border-radius: 4px; display: grid; place-items: center; }
+    .lesson-map { grid-template-columns: repeat(4, 1fr); align-items: center; }
+    .lesson-map .step { position: relative; height: 56%; background: #d5e2ff; border: 1px dashed #7ea4e9; border-radius: 5px; display: grid; place-items: center; text-align: center; }
+    .lesson-map .step:not(:last-child)::after { content: "→"; position: absolute; right: -13px; color: var(--accent); font-size: 14px; }
+    .kwl { grid-template-columns: repeat(3, 1fr); grid-template-rows: 23% 1fr; }
+    .kwl .kwl-head { display: grid; place-items: center; background: #cadcff; border-radius: 4px; font-weight: 700; } .kwl .kwl-body { padding: 5px; background: #fff8ed; border: 1px dashed #aaa99f; border-radius: 4px; }
+    .think-pair { grid-template-columns: repeat(3, 1fr); align-items: center; }
+    .think-pair .phase { height: 56%; display: grid; grid-template-rows: 34% 1fr; gap: 4px; }
+    .think-pair .phase .phase-head { display: grid; place-items: center; background: #cadcff; border-radius: 4px; font-weight: 700; }
+    .worked { grid-template-columns: 1fr 1.2fr 1fr; grid-template-rows: 22% 1fr; }
+    .worked .worked-head { display: grid; place-items: center; background: #cadcff; border-radius: 4px; } .worked .solution { grid-row: 2; background: #fff8ed; border: 1px dashed #aaa99f; border-radius: 4px; padding: 5px; }
+    .reveal { grid-template-rows: 30% 1fr 20%; }
+    .reveal .question { display: grid; place-items: center; background: #cadcff; border-radius: 4px; font-weight: 700; } .reveal .answers { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; } .reveal .answer { border: 1px dashed #aaa99f; border-radius: 4px; display: grid; place-items: center; background: #f4eadc; }
+    .concept-map { display: flex; align-items: center; justify-content: center; }
+    .concept-map .core { width: 28%; aspect-ratio: 1.5; display: grid; place-items: center; background: #cadcff; border: 1px solid #7ea4e9; border-radius: 50%; z-index: 2; text-align: center; }
+    .concept-map .concepts { position: absolute; inset: 10%; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: 3px; } .concept-map .concepts .node:nth-child(1) { grid-column: 2; } .concept-map .concepts .node:nth-child(2) { grid-column: 1; grid-row: 2; } .concept-map .concepts .node:nth-child(3) { grid-column: 3; grid-row: 2; } .concept-map .concepts .node:nth-child(4) { grid-column: 2; grid-row: 3; }
+    .fishbone { grid-template-columns: 1fr 26%; align-items: center; }
+    .fishbone .spine { height: 2px; background: var(--accent); position: relative; } .fishbone .spine::after { content: "▶"; position: absolute; right: -3px; top: -6px; color: var(--accent); } .fishbone .causes { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+    .vocab { grid-template-columns: 34% 1fr; grid-template-rows: 1fr 1fr; gap: 5px; } .vocab .term { grid-row: 1 / 3; display: grid; place-items: center; background: #cadcff; font-size: 13px; font-weight: 700; border-radius: 5px; }
+    .misconception { grid-template-columns: 1fr 1fr; grid-template-rows: 23% 1fr; gap: 5px; } .misconception .head { display: grid; place-items: center; border-radius: 4px; font-weight: 700; } .misconception .wrong { background: #f1d3ce; } .misconception .right { background: #d7ecd9; }
+    .quiz { grid-template-rows: 30% 1fr 21%; } .quiz .question { display: grid; place-items: center; background: #cadcff; border-radius: 4px; font-weight: 700; } .quiz .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; } .quiz .explain { display: grid; place-items: center; background: #d7ecd9; border-radius: 4px; }
+    .reflection { grid-template-columns: repeat(3, 1fr); align-items: stretch; } .reflection .prompt { display: grid; grid-template-rows: 32% 1fr; gap: 5px; } .reflection .prompt strong { display: grid; place-items: center; background: #cadcff; border-radius: 4px; } .reflection .prompt span { border: 1px dashed #aaa99f; border-radius: 4px; background: #fff8ed; }
+    .jigsaw { grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr 23%; gap: 5px; } .jigsaw .station { display: grid; grid-template-rows: 30% 1fr; gap: 4px; } .jigsaw .station strong { display: grid; place-items: center; background: #cadcff; border-radius: 4px; } .jigsaw .synthesis { grid-column: 1 / -1; display: grid; place-items: center; background: #d7ecd9; border-radius: 4px; }
+    .story-map { grid-template-columns: repeat(4, 1fr); grid-template-rows: 30% 1fr; gap: 5px; } .story-map .story-title { grid-column: 1 / -1; display: grid; place-items: center; background: #cadcff; border-radius: 4px; font-weight: 700; } .story-map .story-part { display: grid; grid-template-rows: 28% 1fr; gap: 4px; } .story-map .story-part strong { display: grid; place-items: center; background: #f4eadc; border-radius: 4px; }
+    .lab { grid-template-columns: repeat(3, 1fr); align-items: stretch; gap: 5px; } .lab .lab-part { display: grid; grid-template-rows: 30% 1fr; gap: 4px; } .lab .lab-part strong { display: grid; place-items: center; background: #cadcff; border-radius: 4px; } .lab .lab-part span { border: 1px dashed #aaa99f; border-radius: 4px; background: #fff8ed; }
+    .pbl { grid-template-columns: 1.35fr 1fr; grid-template-rows: 1fr 28%; gap: 5px; } .pbl .scenario { grid-row: 1 / 3; display: grid; grid-template-rows: 28% 1fr; gap: 5px; } .pbl .scenario strong { display: grid; place-items: center; background: #f4eadc; border-radius: 4px; } .pbl .evidence { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; } .pbl .task { grid-column: 2; display: grid; place-items: center; background: #d7ecd9; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <header class="shell">
+    <h1>レイアウトプリセット候補プレビュー</h1>
+    <p class="lead">実装前の比較用に、候補36種をワイヤーフレームで一覧表示しています。採用したい候補にチェックを入れてください。</p>
+    <div class="note">チェック状態はこのブラウザに自動保存されます。最終的な実装を依頼するときは「選択済みをコピー」で取得したプリセット名を渡せます。</div>
+    <div id="selectedPanel" class="selected-panel" aria-live="polite">
+      <strong>選択中: <span id="selectedCountPanel">0</span>件</strong>
+      <ol id="selectedList"></ol>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="shell">
+      <div class="toolbar-inner">
+        <input id="search" type="search" placeholder="候補名・用途・説明を検索…" aria-label="候補を検索">
+        <button id="selectedOnly" type="button">選択済みだけ表示</button>
+        <button id="copySelected" type="button" class="primary">選択済みをコピー</button>
+        <button id="clearSelected" type="button">選択をクリア</button>
+        <span class="count"><span id="visibleCount">36</span> / 36件表示・<span id="selectedCount">0</span>件選択</span>
+      </div>
+      <div id="filters" class="filters" aria-label="カテゴリーフィルター"></div>
+    </div>
+  </div>
+
+  <main class="shell" id="main"></main>
+
+  <script>
+    const candidates = [
+      { id: "numbered-agenda-path", title: "番号付きアジェンダパス", group: "構造・導入", kind: "agenda", summary: "番号付きの節目を一本の道筋として並べる。", use: "目次、発表の流れ、章立て", ref: "Heydecks", url: "https://heydecks.com/blog/slide-design-ideas" },
+      { id: "kpi-strip", title: "KPIストリップ", group: "構造・導入", kind: "kpi", summary: "複数の重要指標を同じ重みで横一列に提示する。", use: "業績サマリー、調査結果、ダッシュボード", ref: "Heydecks", url: "https://heydecks.com/blog/slide-design-ideas" },
+      { id: "single-big-number", title: "シングル・ビッグナンバー", group: "構造・導入", kind: "big-number", summary: "一つの大きな数値を主役にして意味を一行で補足する。", use: "重要指標、成果、インパクトの強調", ref: "Heydecks", url: "https://heydecks.com/blog/slide-design-ideas" },
+      { id: "statement-with-evidence", title: "結論＋根拠3点", group: "構造・導入", kind: "statement", summary: "大きな結論と、下部の小さな根拠を組み合わせる。", use: "経営メッセージ、研究結論、方針", ref: "Microsoft", url: "https://powerpoint.cloud.microsoft/create/en/blog/powerpoint-design-ideas/" },
+      { id: "section-divider-index", title: "セクション区切り＋索引", group: "構造・導入", kind: "section", summary: "大きな章番号と、章内項目の一覧を組み合わせる。", use: "セクション区切り、長い資料のナビゲーション", ref: "Visme", url: "https://visme.co/blog/presentation-layout/" },
+      { id: "before-after-rows", title: "Before / After 行比較", group: "比較・判断", kind: "before", summary: "左右を同じ行構造で揃え、旧状態と新状態を対応付ける。", use: "改善前後、リニューアル、業務改革", ref: "Heydecks", url: "https://heydecks.com/blog/slide-design-ideas" },
+      { id: "comparison-matrix", title: "比較マトリクス", group: "比較・判断", kind: "matrix", summary: "列に比較対象、行に評価軸を置く表形式。", use: "製品比較、競合比較、選択肢の評価", ref: "Gixo / Prism", url: "https://gixo.ai/infographic-layout" },
+      { id: "decision-scorecard", title: "意思決定スコアカード", group: "比較・判断", kind: "score", summary: "判断基準・評価・推奨結論を一枚にまとめる。", use: "意思決定、提案比較、投資判断", ref: "Heydecks", url: "https://heydecks.com/blog/slide-design-ideas" },
+      { id: "two-by-two-matrix", title: "2×2マトリクス", group: "比較・判断", kind: "quad", summary: "2軸の平面上に対象を配置して位置関係を見せる。", use: "優先順位、ポジショニング、リスク評価", ref: "Heydecks", url: "https://heydecks.com/blog/slide-design-ideas" },
+      { id: "competitive-landscape", title: "競合ランドスケープ", group: "比較・判断", kind: "landscape", summary: "軸付きのマップに競合をバブルで配置し、自社を強調する。", use: "市場マップ、競合分析、ポジショニング", ref: "Heydecks", url: "https://heydecks.com/blog/slide-design-ideas" },
+      { id: "horizontal-milestone-timeline", title: "横型マイルストーンタイムライン", group: "時系列・工程", kind: "timeline-h", summary: "横一本の時間軸に節目を置き、ラベルを交互に配置する。", use: "歴史、ロードマップ、リリース計画", ref: "Slide-deck.io", url: "https://slide-deck.io/blog/how-to-design-a-timeline-slide" },
+      { id: "vertical-milestone-timeline", title: "縦型マイルストーンタイムライン", group: "時系列・工程", kind: "timeline-v", summary: "縦の背骨に沿って、説明量の多い節目を積み上げる。", use: "詳細な沿革、履歴、長い説明を伴う工程", ref: "Slide-deck.io", url: "https://slide-deck.io/blog/how-to-design-a-timeline-slide" },
+      { id: "chevron-process-flow", title: "シェブロン工程フロー", group: "時系列・工程", kind: "chevrons", summary: "連結した矢印で段階の進行を強く見せる。", use: "手順、営業ステージ、導入プロセス", ref: "Slide-deck.io", url: "https://slide-deck.io/blog/how-to-design-a-timeline-slide" },
+      { id: "roadmap-lanes", title: "ロードマップレーン", group: "時系列・工程", kind: "lanes", summary: "チームや機能ごとの横レーンに期間を帯で示す。", use: "複数チームの計画、製品ロードマップ、簡易ガント", ref: "Slide-deck.io", url: "https://slide-deck.io/blog/how-to-design-a-timeline-slide" },
+      { id: "zigzag-process", title: "ジグザグ工程", group: "時系列・工程", kind: "zigzag", summary: "画面内を折り返す経路でステップを進める。", use: "チュートリアル、複数段階のストーリー", ref: "Visme", url: "https://visme.co/blog/presentation-layout/" },
+      { id: "cycle-loop", title: "サイクルループ", group: "時系列・工程", kind: "cycle", summary: "円環上に段階を配置し、継続する流れを示す。", use: "PDCA、運用サイクル、継続改善", ref: "Visme", url: "https://visme.co/blog/infographic-layout/" },
+      { id: "three-pillar-columns", title: "3本柱カラム", group: "集合・分類・関係性", kind: "pillars", summary: "同じ幅の3要素を等価に並べる。", use: "戦略の3本柱、サービス、価値提案", ref: "Heydecks", url: "https://heydecks.com/blog/slide-design-ideas" },
+      { id: "bento-grid", title: "Bentoグリッド", group: "集合・分類・関係性", kind: "bento", summary: "大小のカードを組み合わせ、1セル1メッセージにする。", use: "サービス概要、実績一覧、複数KPI", ref: "Heydecks", url: "https://heydecks.com/blog/slide-design-ideas" },
+      { id: "hub-and-spoke", title: "ハブ＆スポーク", group: "集合・分類・関係性", kind: "hub", summary: "中央テーマと独立した周辺カードの集合を見せる。", use: "1テーマの構成要素、機能群、関係者", ref: "Gixo / Prism", url: "https://gixo.ai/infographic-layout" },
+      { id: "radial-facets", title: "ラジアル・ファセット", group: "集合・分類・関係性", kind: "radial", summary: "中心概念の周囲に均等な観点を放射状に置く。", use: "中心概念と観点、ブランド要素、分類", ref: "Gixo / Prism", url: "https://gixo.ai/infographic-layout" },
+      { id: "logic-tree", title: "ロジックツリー", group: "集合・分類・関係性", kind: "tree", summary: "上位の問いや結論から下位の分岐へ展開する。", use: "論点整理、意思決定、分類、要因分解", ref: "Heydecks", url: "https://heydecks.com/blog/slide-design-ideas" },
+      { id: "hierarchy-tree", title: "階層ツリー", group: "集合・分類・関係性", kind: "hierarchy", summary: "最上位から下位ノードへ段階的に枝を伸ばす。", use: "組織図、製品体系、情報階層", ref: "Visme", url: "https://visme.co/blog/infographic-layout/" },
+      { id: "venn-overlap", title: "ベン図オーバーラップ", group: "集合・分類・関係性", kind: "venn", summary: "重なる領域を共通価値・統合領域として強調する。", use: "共通点、統合領域、ターゲット定義", ref: "Visme", url: "https://visme.co/courses/wp-content/uploads/2020/08/The-Different-Types-of-Diagrams.pdf" },
+      { id: "concentric-rings", title: "同心円レイヤー", group: "集合・分類・関係性", kind: "rings", summary: "中心から外側へ意味の範囲が広がる構造を示す。", use: "エコシステム、成熟度、優先範囲、影響範囲", ref: "Visme", url: "https://visme.co/courses/wp-content/uploads/2020/08/The-Different-Types-of-Diagrams.pdf" },
+      { id: "pyramid-levels", title: "ピラミッド階層", group: "量・構成・流量", kind: "pyramid", summary: "幅の異なる水平層で優先度や価値階層を表す。", use: "優先順位、成熟度、価値階層、戦略", ref: "Visme", url: "https://visme.co/blog/infographic-layout/" },
+      { id: "funnel-stages", title: "ファネルステージ", group: "量・構成・流量", kind: "funnel", summary: "段階が進むほど幅が狭くなる流量構造を示す。", use: "販売ファネル、採用、認知から成約まで", ref: "Visme", url: "https://visme.co/blog/infographic-layout/" },
+      { id: "waterfall-bridge", title: "ウォーターフォール・ブリッジ", group: "量・構成・流量", kind: "waterfall", summary: "開始値と終了値を中間の増減要因でつなぐ。", use: "予算差分、利益ブリッジ、増減要因", ref: "Microsoft", url: "https://powerpoint.cloud.microsoft/create/en/blog/powerpoint-design-ideas/" },
+      { id: "chart-with-takeaway", title: "結論見出し＋チャート", group: "量・構成・流量", kind: "chart", summary: "上部に先に結論を置き、中央のチャートで裏付ける。", use: "トレンド、比較、単一のデータ洞察", ref: "Microsoft", url: "https://powerpoint.cloud.microsoft/create/en/blog/powerpoint-design-ideas/" },
+      { id: "map-with-callouts", title: "地図＋コールアウト", group: "量・構成・流量", kind: "map", summary: "地図上に地域別の数値や注釈を重ねる。", use: "地域別実績、拠点、分布、展開計画", ref: "Heydecks", url: "https://heydecks.com/blog/slide-design-ideas" },
+      { id: "asymmetric-rule-of-thirds", title: "非対称・三分割", group: "画像・人物・証拠", kind: "thirds", summary: "主役のビジュアルを大きく、補助情報を狭い領域に置く。", use: "事例紹介、人物紹介、プロダクト紹介", ref: "Visme", url: "https://visme.co/blog/presentation-layout/" },
+      { id: "diagonal-split", title: "斜め分割", group: "画像・人物・証拠", kind: "diagonal", summary: "斜めの境界で画像領域とテキスト領域を分ける。", use: "ブランド紹介、キャンペーン、ビジュアル重視の説明", ref: "Visme", url: "https://visme.co/blog/presentation-layout/" },
+      { id: "layered-collage", title: "レイヤード・コラージュ", group: "画像・人物・証拠", kind: "collage", summary: "写真・図形・テキストカードを重ねて主役を作る。", use: "クリエイティブ紹介、コンセプト、ケーススタディ", ref: "Visme", url: "https://visme.co/blog/presentation-layout/" },
+      { id: "team-grid-with-caption", title: "チームグリッド＋役割説明", group: "画像・人物・証拠", kind: "team", summary: "人物グリッドと役割説明を組み合わせる。", use: "チーム紹介、登壇者、組織紹介", ref: "Visme", url: "https://visme.co/blog/presentation-layout/" },
+      { id: "case-study-proof-card", title: "ケーススタディ証拠カード", group: "画像・人物・証拠", kind: "case", summary: "顧客の課題・施策・成果を横一列の物語にする。", use: "導入事例、顧客実績、成果の説明", ref: "Heydecks", url: "https://heydecks.com/blog/slide-design-ideas" },
+      { id: "logo-wall-with-caption", title: "ロゴウォール＋説明", group: "画像・人物・証拠", kind: "logos", summary: "ロゴを均等なグリッドに並べ、実績の意味を補足する。", use: "顧客実績、パートナー、採用実績", ref: "Heydecks", url: "https://heydecks.com/blog/slide-design-ideas" },
+      { id: "magazine-sidebar", title: "マガジン型サイドバー", group: "画像・人物・証拠", kind: "magazine", summary: "主本文に引用・補足・ページ情報のサイドバーを添える。", use: "ブランド、記事型ストーリー、読み物", ref: "Handoff", url: "https://handoff.design/css-layouts/magazine-layouts-grid/" },
+      { id: "training-objectives-agenda", title: "研修目的＋到達基準", group: "研修資料向け", kind: "objective", summary: "この研修で扱うこと、現場でできるようになること、当日の進め方を最初に示す。", use: "研修冒頭、オンボーディング、講師用の導入スライド", ref: "Monash University", url: "https://www.monash.edu/learning-teaching/teachhq/Teaching-practices/using-multimedia/how-to/powerpoint-slides" },
+      { id: "training-roadmap", title: "研修ロードマップ", group: "研修資料向け", kind: "lesson-map", summary: "説明・デモ・演習・確認・現場適用までの研修全体を見通せるようにする。", use: "新人研修、資格研修、複数回講座の案内", ref: "McGill University", url: "https://teachingkb.mcgill.ca/tlk/design-slides-to-support-learning" },
+      { id: "precheck-current-state", title: "事前確認：現状・課題・期待", group: "研修資料向け", kind: "kwl", summary: "受講前の経験、現在の困りごと、研修への期待を3列で整理する。", use: "研修開始時のヒアリング、受講者のレベル合わせ", ref: "Canva / KWL chart", url: "https://www.canva.com/online-whiteboard/kwl-chart/" },
+      { id: "workshop-exercise", title: "ワークショップ進行", group: "研修資料向け", kind: "think-pair", summary: "個人で考える→ペア／グループで話す→代表が共有する進行を示す。", use: "社内ワークショップ、対話型研修、合意形成", ref: "Monash University", url: "https://www.monash.edu/learning-teaching/teachhq/Teaching-practices/using-multimedia/how-to/powerpoint-slides" },
+      { id: "demonstration-walkthrough", title: "デモ→手順→完成例", group: "研修資料向け", kind: "worked", summary: "講師が見せる完成イメージ、操作手順、実施後の状態を並べる。", use: "業務ツール研修、接客・営業ロールプレイ、技能研修", ref: "MSU Effective PowerPoint", url: "https://omerad.msu.edu/meded/effectiveppt_intro.html" },
+      { id: "facilitator-reveal", title: "問い→ヒント→講師解説", group: "研修資料向け", kind: "reveal", summary: "受講者に考えてもらう問い、判断材料、講師の解説を段階的に提示する。", use: "ケース討議、判断基準の説明、講義中の参加促進", ref: "MSU Effective PowerPoint", url: "https://omerad.msu.edu/meded/effectiveppt_intro.html" },
+      { id: "operating-model-map", title: "業務全体像マップ", group: "研修資料向け", kind: "concept-map", summary: "担当業務、関係部署、入力・出力、関連ルールを一枚の地図にする。", use: "業務理解、組織オンボーディング、業務設計研修", ref: "University of Florida IFAS", url: "https://ask.ifas.ufl.edu/publication/wc071" },
+      { id: "root-cause-analysis", title: "原因分析フィッシュボーン", group: "研修資料向け", kind: "fishbone", summary: "発生した問題を複数の観点から分解し、再発防止の入口をつくる。", use: "品質改善、安全研修、問題解決、管理職研修", ref: "Canva / KWL chart", url: "https://www.canva.com/online-whiteboard/kwl-chart/" },
+      { id: "glossary-callout", title: "用語・定義・現場例カード", group: "研修資料向け", kind: "vocab", summary: "専門用語の定義と、現場での具体例・注意点を一枚にまとめる。", use: "コンプライアンス、IT、医療、業界用語の説明", ref: "McGill University", url: "https://teachingkb.mcgill.ca/tlk/design-slides-to-support-learning" },
+      { id: "myth-fact", title: "よくある誤解→正しい対応", group: "研修資料向け", kind: "misconception", summary: "現場で起きやすい誤った判断と、正しい基準・対応を対比する。", use: "安全、コンプライアンス、接客、マネジメント研修", ref: "University of Delaware KWL", url: "https://www1.udel.edu/dssep/teaching_strategies/kwl.htm" },
+      { id: "knowledge-check", title: "理解度チェック＋解説", group: "研修資料向け", kind: "quiz", summary: "研修内容に関する判断問題と、正解・理由・現場での注意点を示す。", use: "研修中の確認、eラーニング、修了テスト", ref: "McGill University", url: "https://teachingkb.mcgill.ca/tlk/design-slides-to-support-learning" },
+      { id: "action-plan", title: "現場適用アクションプラン", group: "研修資料向け", kind: "reflection", summary: "学んだこと、現場で変えること、実行期限を記入できるようにする。", use: "研修の締め、受講後課題、上司とのフォローアップ", ref: "University of Delaware KWL", url: "https://www1.udel.edu/dssep/teaching_strategies/kwl.htm" },
+      { id: "breakout-exercise", title: "グループ演習ステーション", group: "研修資料向け", kind: "jigsaw", summary: "複数チームが別々の観点を検討し、最後に共通の提案へ統合する。", use: "集合研修、部門横断ワークショップ、企画研修", ref: "Monash University", url: "https://www.monash.edu/learning-teaching/teachhq/Teaching-practices/using-multimedia/how-to/powerpoint-slides" },
+      { id: "case-study-scenario", title: "ケーススタディの展開", group: "研修資料向け", kind: "story-map", summary: "登場人物、背景、発生した問題、取るべき対応を順に追う。", use: "営業、接客、管理職、医療・福祉のケース研修", ref: "University of Florida IFAS", url: "https://ask.ifas.ufl.edu/publication/wc071" },
+      { id: "procedure-checklist", title: "標準手順チェックリスト", group: "研修資料向け", kind: "lab", summary: "準備、手順、完了条件／記録を3列で整理し、現場で再利用できる形にする。", use: "作業手順、安全確認、店舗運営、技能訓練", ref: "EdrawMax education infographics", url: "https://edrawmax.wondershare.com/examples/education-infographic-examples.html" },
+      { id: "role-play-scenario", title: "ロールプレイ：状況→手がかり→行動", group: "研修資料向け", kind: "pbl", summary: "現場の状況と手がかりを示し、受講者が取る行動や声かけを考える。", use: "営業、接客、採用面接、クレーム対応研修", ref: "University of Florida IFAS", url: "https://ask.ifas.ufl.edu/publication/wc071" }
+    ];
+
+    const groups = [...new Set(candidates.map(item => item.group))];
+    const storageKey = "slide-storyboard-layout-candidate-selection-v3";
+    const defaultSelected = ["numbered-agenda-path", "statement-with-evidence", "kpi-strip", "before-after-rows", "horizontal-milestone-timeline", "vertical-milestone-timeline", "chevron-process-flow", "roadmap-lanes", "hierarchy-tree", "logic-tree", "venn-overlap", "radial-facets", "chart-with-takeaway", "magazine-sidebar", "myth-fact", "procedure-checklist", "glossary-callout", "workshop-exercise", "training-objectives-agenda", "training-roadmap", "demonstration-walkthrough", "precheck-current-state", "action-plan"];
+    let storedSelection = JSON.parse(localStorage.getItem(storageKey) || "null");
+    let selected = new Set(storedSelection === null ? defaultSelected : storedSelection);
+    let selectedOnly = false;
+    let activeGroup = "すべて";
+
+    const el = (tag, attrs = {}, children = []) => {
+      const node = document.createElement(tag);
+      Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+      children.forEach(child => node.append(child));
+      return node;
+    };
+
+    function save() { localStorage.setItem(storageKey, JSON.stringify([...selected])); }
+
+    function preview(kind) {
+      const z = (text, cls = "zone text") => `<div class="${cls}">${text}</div>`;
+      const simple = (cls, html) => `<div class="wireframe ${cls}">${html}</div>`;
+      switch (kind) {
+        case "agenda": return simple("agenda", ["01 問題", "02 方法", "03 結果", "04 次の一手"].map(x => `<div class="node">${x}</div>`).join(""));
+        case "kpi": return simple("kpi", `${z("結論見出し", "headline")}<div class="metric">$1.8M<br>ARR</div><div class="metric">+22%<br>成長</div><div class="metric">96%<br>精度</div><div class="metric">131%<br>継続率</div>`);
+        case "big-number": return simple("big-number", `<div class="metric">96<span style="font-size:10px">%</span></div>${z("前年より大幅に改善", "headline")}${z("短い補足説明")}`);
+        case "statement": return simple("statement", `<div class="headline">この施策は、次の四半期の成長を支える</div><div class="evidence"><div class="mini-card">調査</div><div class="mini-card">実績</div><div class="mini-card">予測</div></div>`);
+        case "section": return simple("section", `<div class="number">02</div><div class="list"><div class="node">市場の課題</div><div class="node">提案する方法</div><div class="node">検証結果</div></div>`);
+        case "before": return simple("before", `<div class="head">BEFORE</div><div class="head">AFTER</div>${["5日 → 2日", "3人 → 1人", "$500 → $200"].map(x => `<div class="mini-card">${x.split(" → ")[0]}</div><div class="mini-card accent">${x.split(" → ")[1]}</div>`).join("")}`);
+        case "matrix": return simple("matrix", `<div class="corner"></div><div class="mini-card">A案</div><div class="mini-card">B案</div><div class="mini-card">C案</div>${["価格", "速度", "拡張性"].map((x, i) => `<div class="mini-card">${x}</div><div class="mini-card">${i + 2}/5</div><div class="mini-card">${i + 3}/5</div><div class="mini-card">${i + 4}/5</div>`).join("")}`);
+        case "score": return simple("score", `<div class="mini-card">評価軸</div><div class="mini-card">評価</div><div class="verdict">推奨<br><b>A案</b></div>${["費用", "効果", "実行性"].map(x => `<div class="mini-card">${x}</div><div class="mini-card">高</div>`).join("")}`);
+        case "quad": return simple("quad", `<div></div><div class="plot"><span class="dot a"></span><span class="dot b"></span><span class="dot c"></span></div><div></div><div style="text-align:center">実行しやすさ →</div>`);
+        case "landscape": return simple("landscape", `<div></div><div class="plot"><span class="bubble a">競合A</span><span class="bubble b">自社</span><span class="bubble c">競合B</span></div><div></div><div style="text-align:center">市場フォーカス →</div>`);
+        case "timeline-h": return simple("timeline-h", `<div class="track">${[1,2,3,4,5].map(() => `<span></span>`).join("")}</div><div class="labels">${["Q1", "Q2", "Q3", "Q4", "Q1"].map(x => `<div>${x}</div>`).join("")}</div>`);
+        case "timeline-v": return simple("timeline-v", `<div class="spine"></div>${["2024 調査", "2025 試作", "2026 導入", "2027 拡大"].map(x => `<div class="vitem zone text">${x}</div>`).join("")}`);
+        case "chevrons": return simple("chevrons", `<div class="step">発見</div><div class="step">設計</div><div class="step">検証</div><div class="step">展開</div>`);
+        case "lanes": return simple("lanes", `<div class="mini-card">Workstream</div><div class="mini-card">期間 →</div><div class="mini-card">Design</div><div class="bars"><div class="bar">Phase 1</div></div><div class="mini-card">Build</div><div class="bars"><div class="bar">Phase 2</div></div><div class="mini-card">Launch</div><div class="bars"><div class="bar">Phase 3</div></div>`);
+        case "zigzag": return simple("zigzag", `<div class="route"></div><div class="steps"><div class="zone">01</div><div class="zone">02</div><div class="zone">03</div><div class="zone">04</div></div>`);
+        case "cycle": return simple("cycle", `<div class="ring"><div class="center">改善<br>サイクル</div></div>`);
+        case "pillars": return simple("pillars", ["戦略", "実行", "学習"].map((x, i) => `<div class="pillar"><div class="dark">${x}</div><div class="mini-card">要素<br>要素<br>要素</div><div class="accent">${i + 1} / 3</div></div>`).join(""));
+        case "bento": return simple("bento", `<div class="big zone visual">主役の価値</div><div class="mini-card">KPI 01</div><div class="mini-card">KPI 02</div><div class="wide mini-card">補足・実績・証拠</div>`);
+        case "hub": return simple("hub", `<div class="center-node">中心<br>テーマ</div><div class="spokes">${["機能A", "顧客", "運用", "成果"].map(x => `<div class="node">${x}</div>`).join("")}</div>`);
+        case "radial": return simple("radial", `<div class="center-node">中心<br>概念</div><div class="facets">${["視点A", "視点B", "視点C", "視点D"].map(x => `<div class="node">${x}</div>`).join("")}</div>`);
+        case "tree": return simple("tree", `<div class="root dark">問い／結論</div><div></div><div></div><div class="branch"><div class="node">原因A</div><div class="node">原因B</div><div class="node">原因C</div></div>`);
+        case "hierarchy": return simple("hierarchy", `<div class="level"><div class="dark node">最上位</div></div><div class="level"><div class="node">下位A</div><div class="node">下位B</div></div><div class="level"><div class="node">要素1</div><div class="node">要素2</div><div class="node">要素3</div></div>`);
+        case "venn": return simple("venn", `<div class="circle">顧客</div><div class="circle">課題</div><div class="circle">技術</div>`);
+        case "rings": return simple("rings", `<div class="ring r1"><div class="ring r2"><div class="ring r3">核心</div></div></div>`);
+        case "pyramid": return simple("pyramid", ["目的", "戦略", "施策", "実行"].map(x => `<div class="level">${x}</div>`).join(""));
+        case "funnel": return simple("funnel", ["認知 100%", "関心 60%", "検討 25%", "成約 8%"].map(x => `<div class="stage">${x}</div>`).join(""));
+        case "waterfall": return simple("waterfall", `<div class="bar total"></div><div class="bar up"></div><div class="bar down"></div><div class="bar up"></div><div class="bar total"></div>`);
+        case "chart": return simple("chart", `<div class="headline">売上は3四半期連続で成長</div><div class="plot"><div class="line"></div></div><div class="caption">Q1　Q2　Q3　Q4</div>`);
+        case "map": return simple("map", `<div class="land"></div><div class="callout c1">北 32</div><div class="callout c2">南 18</div><div class="callout c3">東 45</div>`);
+        case "thirds": return simple("thirds", `${z("主役の画像", "zone visual")}${z("見出し", "zone text")}${z("補足")}`);
+        case "diagonal": return simple("diagonal", `${z("IMAGE", "zone visual")}${z("HEADLINE", "zone text")}`);
+        case "collage": return simple("collage", `<div class="photo p1">IMAGE</div><div class="photo p2">IMAGE</div><div class="quote">強い引用<br>または結論</div>`);
+        case "team": return simple("team", `<div class="faces">${["A", "B", "C", "D"].map(x => `<div class="zone visual">${x}</div>`).join("")}</div><div class="caption"><div class="zone text">役割・紹介</div><div class="zone text">チームの強み</div></div>`);
+        case "case": return simple("case", `<div class="zone text">課題</div><div class="arrow">→</div><div class="zone visual">施策</div><div class="arrow">→</div><div class="zone result">成果<br>+42%</div>`);
+        case "logos": return simple("logos", `${[1,2,3,4,5,6,7,8].map(x => `<div class="logo">LOGO</div>`).join("")}<div class="label">顧客・パートナーの実績</div>`);
+        case "magazine": return simple("magazine", `<div class="hero headline">大見出し＋リード文</div><div class="story zone text">本文<br>本文<br>本文<br>本文</div><div class="sidebar zone">PULL QUOTE<br>補足</div>`);
+        case "objective": return simple("objective", `<div class="headline">この時間の学習目標</div><div class="zone text">学ぶこと<br>概念・技能</div><div class="zone visual">到達基準<br>できること</div><div class="activity">今日の活動：問い → 実践 → 確認</div>`);
+        case "lesson-map": return simple("lesson-map", ["導入", "説明", "練習", "振り返り"].map(x => `<div class="step">${x}</div>`).join(""));
+        case "kwl": return simple("kwl", ["K：知っている", "W：知りたい", "L：学んだ"].map(x => `<div class="kwl-head">${x}</div>`).join("") + ["既有知識", "問い", "新しい発見"].map(x => `<div class="kwl-body">${x}<br>・メモ<br>・メモ</div>`).join(""));
+        case "think-pair": return simple("think-pair", ["Think\n個人で考える", "Pair\nペアで話す", "Share\n全体で共有"].map(x => { const [a,b] = x.split("\n"); return `<div class="phase"><div class="phase-head">${a}</div><div class="zone text">${b}</div></div>`; }).join(""));
+        case "worked": return simple("worked", `<div class="worked-head">問題</div><div class="worked-head">考え方・途中式</div><div class="worked-head">答え</div><div class="zone text">例題<br>問いを読む</div><div class="solution">① 条件を整理<br>② 式を立てる<br>③ 計算する<br>④ 確認する</div><div class="zone visual">答え<br><b>42</b></div>`);
+        case "reveal": return simple("reveal", `<div class="question">なぜこの結果になる？</div><div class="answers"><div class="answer">ヒント1</div><div class="answer">ヒント2</div><div class="answer">予想を書く</div><div class="answer">ペアで確認</div></div><div class="zone visual">解答・解説を開示</div>`);
+        case "concept-map": return simple("concept-map", `<div class="core">中心概念</div><div class="concepts">${["定義", "原因", "結果", "具体例"].map(x => `<div class="node">${x}</div>`).join("")}</div>`);
+        case "fishbone": return simple("fishbone", `<div class="causes"><div class="node">原因A</div><div class="node">原因B</div><div class="node">原因C</div><div class="node">原因D</div></div><div class="spine"></div><div class="zone result">結果／問い</div>`);
+        case "vocab": return simple("vocab", `<div class="term">TERM</div><div class="zone text">定義：意味を短く</div><div class="zone visual">例・非例・図解</div>`);
+        case "misconception": return simple("misconception", `<div class="head wrong">よくある誤解</div><div class="head right">正しいモデル</div><div class="zone wrong">「重い物は速く落ちる」</div><div class="zone right">条件を分けて考える<br>図で確認</div>`);
+        case "quiz": return simple("quiz", `<div class="question">どれが正しい？</div><div class="choices"><div class="mini-card">A　選択肢</div><div class="mini-card">B　選択肢</div><div class="mini-card">C　選択肢</div><div class="mini-card">D　選択肢</div></div><div class="explain">正解：B　理由を確認</div>`);
+        case "reflection": return simple("reflection", [["わかった", "要点"], ["まだ疑問", "質問"], ["次に使う", "行動"]].map(([a,b]) => `<div class="prompt"><strong>${a}</strong><span>${b}</span></div>`).join(""));
+        case "jigsaw": return simple("jigsaw", ["担当A", "担当B", "担当C"].map(x => `<div class="station"><strong>${x}</strong><div class="zone text">調べる<br>説明する</div></div>`).join("") + `<div class="synthesis">全員の知識を統合して結論へ</div>`);
+        case "story-map": return simple("story-map", `<div class="story-title">物語／ケースの全体像</div>${[["人物", "誰が？"], ["状況", "いつ・どこ？"], ["問題", "何が起きた？"], ["解決", "どうなった？"]].map(([a,b]) => `<div class="story-part"><strong>${a}</strong><div class="zone text">${b}</div></div>`).join("")}`);
+        case "lab": return simple("lab", [["方法", "手順・材料"], ["観察", "記録・データ"], ["考察", "なぜ？"]].map(([a,b]) => `<div class="lab-part"><strong>${a}</strong><span>${b}<br>・メモ<br>・図</span></div>`).join(""));
+        case "pbl": return simple("pbl", `<div class="scenario"><strong>問題場面</strong><div class="zone text">現実のケース<br>状況・制約・登場人物</div></div><div class="evidence"><div class="mini-card">手がかりA</div><div class="mini-card">手がかりB</div></div><div class="task">調査・提案する課題</div>`);
+        default: return simple("", `${z("TEXT")}${z("VISUAL", "zone visual")}`);
+      }
+    }
+
+    function renderFilters() {
+      const box = document.getElementById("filters");
+      box.replaceChildren();
+      ["すべて", ...groups].forEach(group => {
+        const button = el("button", { type: "button", class: `filter ${activeGroup === group ? "active" : ""}` });
+        button.textContent = group;
+        button.addEventListener("click", () => { activeGroup = group; renderFilters(); render(); });
+        box.append(button);
+      });
+    }
+
+    function render() {
+      const main = document.getElementById("main");
+      main.replaceChildren();
+      const query = document.getElementById("search").value.trim().toLowerCase();
+      let visible = 0;
+      groups.forEach(group => {
+        const items = candidates.filter(item => {
+          const haystack = `${item.id} ${item.title} ${item.summary} ${item.use} ${item.group}`.toLowerCase();
+          return item.group === group && (activeGroup === "すべて" || activeGroup === group) && (!query || haystack.includes(query)) && (!selectedOnly || selected.has(item.id));
+        });
+        if (!items.length) return;
+        visible += items.length;
+        const heading = el("h2", { class: "group-title" }); heading.textContent = group; main.append(heading);
+        const grid = el("div", { class: "grid" });
+        items.forEach(item => {
+          const article = el("article", { class: `candidate ${selected.has(item.id) ? "selected" : ""}`, "data-id": item.id });
+          article.innerHTML = `<div class="candidate-head"><input class="pick" type="checkbox" ${selected.has(item.id) ? "checked" : ""} aria-label="${item.title}を採用候補にする"><div class="candidate-title"><h3>${item.title}</h3><span class="id">${item.id}</span></div><span class="tag">${item.group}</span></div><div class="wireframe-wrap">${preview(item.kind)}<div class="caption">ワイヤーフレーム：${item.id}</div></div><div class="body"><p class="summary">${item.summary}</p><p class="use">用途：${item.use}</p><a class="ref" href="${item.url}" target="_blank" rel="noreferrer">参考：${item.ref} ↗</a></div>`;
+          article.querySelector(".pick").addEventListener("change", event => {
+            if (event.target.checked) selected.add(item.id); else selected.delete(item.id);
+            save(); render(); updateSelectedPanel();
+          });
+          grid.append(article);
+        });
+        main.append(grid);
+      });
+      document.getElementById("visibleCount").textContent = visible;
+      document.getElementById("selectedCount").textContent = selected.size;
+      document.getElementById("selectedOnly").classList.toggle("primary", selectedOnly);
+    }
+
+    function updateSelectedPanel() {
+      const panel = document.getElementById("selectedPanel");
+      const list = document.getElementById("selectedList");
+      list.replaceChildren();
+      [...selected].map(id => candidates.find(item => item.id === id)).filter(Boolean).forEach(item => {
+        const li = el("li"); li.textContent = `${item.id} — ${item.title}`; list.append(li);
+      });
+      panel.classList.toggle("show", selected.size > 0);
+      document.getElementById("selectedCountPanel").textContent = selected.size;
+    }
+
+    document.getElementById("search").addEventListener("input", render);
+    document.getElementById("selectedOnly").addEventListener("click", () => { selectedOnly = !selectedOnly; render(); });
+    document.getElementById("clearSelected").addEventListener("click", () => { selected.clear(); save(); render(); updateSelectedPanel(); });
+    document.getElementById("copySelected").addEventListener("click", async () => {
+      const text = [...selected].map(id => `- ${id}`).join("\n") || "（未選択）";
+      try {
+        await navigator.clipboard.writeText(text);
+        document.getElementById("copySelected").textContent = "コピーしました";
+        setTimeout(() => document.getElementById("copySelected").textContent = "選択済みをコピー", 1400);
+      } catch {
+        window.prompt("以下をコピーしてください", text);
+      }
+    });
+
+    renderFilters();
+    render();
+    updateSelectedPanel();
+  </script>
+</body>
+</html>

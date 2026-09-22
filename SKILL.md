@@ -46,6 +46,29 @@ disable-model-invocation: true
 | `center-visual-split-text` | 中央に視覚要素、左右に箇条書き |
 | `full-bleed-visual` | 視覚要素を全面に敷き、テキストを重ねる |
 | `text-only` | 視覚要素なし |
+| `numbered-agenda-path` | 番号付きの節目を一本の道筋として配置 |
+| `statement-with-evidence` | 大きな結論と、下段の根拠3点 |
+| `kpi-strip` | 見出しの下にKPIカードを横一列で配置 |
+| `before-after-rows` | 左右を同じ行構造で対応付ける比較 |
+| `horizontal-milestone-timeline` | 横軸に時点とマイルストーンを配置 |
+| `vertical-milestone-timeline` | 縦の時間軸と右側の詳細説明 |
+| `chevron-process-flow` | 連結した矢印で工程の進行を表現 |
+| `roadmap-lanes` | 複数チーム・機能の期間を横レーンで表示 |
+| `hierarchy-tree` | 上位概念から下位要素へ広がる階層図 |
+| `logic-tree` | 問い・結論から論点や要因へ分岐 |
+| `venn-overlap` | 複数の集合と共通領域を表示 |
+| `radial-facets` | 中心概念から周囲の観点へ放射状に展開 |
+| `chart-with-takeaway` | 結論見出し、チャート、注釈の順に配置 |
+| `magazine-sidebar` | 主本文と引用・補足のサイドバー |
+| `myth-fact` | よくある誤解と正しい対応の対比 |
+| `procedure-checklist` | 準備、標準手順、完了条件・記録の3列 |
+| `glossary-callout` | 用語、定義、現場例・注意点のカード |
+| `workshop-exercise` | 個人検討、グループ討議、共有の3段階 |
+| `training-objectives-agenda` | 研修目的、到達基準、当日の流れ |
+| `training-roadmap` | 説明、デモ、演習、現場適用の流れ |
+| `demonstration-walkthrough` | デモ、実施手順、完成例の3列 |
+| `precheck-current-state` | 受講前の現状、課題、期待の3列 |
+| `action-plan` | 学び、変える行動、期限・確認の3列 |
 
 各プリセットの `.zone` 構成(何個の text/visual ボックスをどう並べるか)は `assets/template.html` 内のコメント例を参照する。
 

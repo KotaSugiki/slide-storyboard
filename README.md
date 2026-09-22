@@ -1,26 +1,42 @@
 # slide-storyboard
 
-Claude Code 用のスキルです。アジェンダから対話形式でスライド構成(タイトル・キーメッセージ・レイアウト・イラスト構図・画像生成プロンプト)を1枚ずつ詰め、HTMLのストーリーボードとして書き出します。
+アジェンダから対話形式でスライド構成(タイトル・キーメッセージ・レイアウト・イラスト構図・画像生成プロンプト)を1枚ずつ詰め、HTMLのストーリーボードとして書き出すAgent Skillです。`npx skills` に対応しているエージェントへインストールできます。
 
 ## できること
 
 - アジェンダ(Markdown等)を読み込み、スライド単位に区切る
 - スライドごとに、タイトル・キーメッセージ(100〜150字程度)・視覚要素の要否を1問ずつ確認しながら決める
 - イラストや図が必要な場合は、構図案を理由・トレードオフとともに提示し、画像生成AI(Midjourney、DALL-Eなど)にそのまま渡せる英語プロンプトを作成する
-- 決まったレイアウト(左右分割・上下分割・中央配置・全面ビジュアル・テキストのみ)を、ワイヤーフレーム付きのHTMLとして可視化する
+- 決まったレイアウト(既存6種＋追加23種)を、ワイヤーフレーム付きのHTMLとして可視化する
 - 成果物はそのままブラウザで開ける単一のHTMLファイル。これを見ながらPowerPointなどでスライドを作成する
 
 ## インストール
 
-このリポジトリを `~/.claude/skills/slide-storyboard` に配置してください。
+GitHubへ公開した後、次のコマンドでインストールできます。
 
 ```bash
-git clone https://github.com/KotaSugiki/slide-storyboard.git ~/.claude/skills/slide-storyboard
+npx skills add KotaSugiki/slide-storyboard --skill slide-storyboard
 ```
+
+特定のエージェントだけを対象にする場合:
+
+```bash
+npx skills add KotaSugiki/slide-storyboard --skill slide-storyboard --agent claude-code
+npx skills add KotaSugiki/slide-storyboard --skill slide-storyboard --agent codex
+```
+
+ローカルで確認する場合:
+
+```bash
+npx skills add . --list
+npx skills add . --skill slide-storyboard --agent claude-code --copy --yes
+```
+
+`SKILL.md` はリポジトリ直下にあり、`assets/template.html` はスキルの付属ファイルとして同じディレクトリから参照されます。
 
 ## 使い方
 
-Claude Codeのセッション内で次のように呼び出します(ユーザー呼び出し専用のスキルのため、名前を直接入力してください)。
+インストール後、対応エージェントのセッション内で次のように呼び出します(ユーザー呼び出し専用のスキルのため、名前を直接入力してください)。
 
 ```
 /slide-storyboard
