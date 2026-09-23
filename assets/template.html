@@ -259,7 +259,7 @@
   .layout-chart-with-takeaway{ grid-template-rows:.35fr 1fr .25fr; }
   .layout-chart-with-takeaway .zone.headline{ font-size:.8rem; }
   .layout-chart-with-takeaway .plot{ position:relative; border-left:1px solid #999; border-bottom:1px solid #999; background:linear-gradient(to top,transparent 24%,rgba(100,100,100,.08) 25%,transparent 26%,transparent 49%,rgba(100,100,100,.08) 50%,transparent 51%,transparent 74%,rgba(100,100,100,.08) 75%,transparent 76%); }
-  .layout-chart-with-takeaway .plot::after{ content:''; position:absolute; left:10%; right:10%; top:32%; height:2px; background:var(--accent); transform:skewY(-12deg); }
+  /* データ未確認の段階で傾向を示す線を描かない。実データがある場合だけプロットを追加する。 */
 
   /* magazine-sidebar: 主本文＋引用／補足サイドバー */
   .layout-magazine-sidebar{ grid-template-columns:1.5fr .6fr; grid-template-rows:.35fr 1fr .25fr; gap:6px; }
@@ -314,10 +314,11 @@
 <body>
 
   <h1>{{デッキタイトル}}</h1>
-  <p class="deck-sub">共通イラストスタイル: <code>{{共通スタイル文字列}}</code></p>
+  <!-- イラストを使わないデッキでは次の行を削除する。 -->
+  <p class="deck-sub">共通イラストスタイル: <code>{{共通スタイル文字列。未承認なら〖仮案〗を付ける}}</code></p>
 
   <!-- ============================================================
-       スライドカード1枚分。手順5でスライドの枚数だけ複製して埋める。
+       スライドカード1枚分。SKILL.md の手順6でスライドの枚数だけ複製して埋める。
        下の例は layout-left-text-right-visual のワイヤーフレーム。
        他プリセットのワイヤーフレームHTMLは、このコメントブロックの下にある
        「プリセット別 .zone 構成の例」を参照して組み替える。
@@ -325,7 +326,7 @@
        確認必須の項目には <span class="status status-pending">〖要確認〗</span> を付ける。
        確認済みの項目には表示を付けず、一覧からも除く。
        完成HTMLでは {{...}} をすべて実際の内容に置き換える。
-       不明な事実は「要確認」、提案した文言は「仮案」と表示し、
+       不明な事実は「〖要確認〗」、提案した文言は「〖仮案〗」と表示し、
        出典や数値を創作しない。使わない欄と表の行は削除する。
        ============================================================ -->
   <section class="slide-card" id="slide-{{番号}}">
@@ -335,6 +336,7 @@
         <div class="zone visual"><span class="zone-id">Z2</span>図・イラスト</div>
       </div>
       <p class="wireframe-caption">layout-left-text-right-visual</p>
+      <!-- レイアウトが未承認なら上のキャプションにも status-proposal を付ける。 -->
     </div>
     <div>
       <span class="slide-no">Slide {{番号}}</span>
@@ -342,7 +344,7 @@
       <div class="key-message">{{キーメッセージ。構成上の要約。表示する場合は下の完成文言にも記載}}</div>
 
       <p class="field-label">スライドに載せる完成文言・配置</p>
-      <p class="field-note">各行がワイヤーフレームの表示領域に対応。タイトル、本文、箇条書き、図中ラベル、表の見出し、軸名、凡例、表示注釈をすべて記載する。</p>
+      <p class="field-note">各行がワイヤーフレームの表示領域に対応。タイトル、本文、箇条書き、図中ラベル、表の見出し、軸名、凡例、表示注釈をすべて記載する。仮案は該当する文言の直前に示す。</p>
       <table class="content-table">
         <thead><tr><th>ゾーン</th><th>載せる文言</th></tr></thead>
         <tbody>
@@ -353,7 +355,7 @@
       </table>
 
       <p class="field-label">視覚素材の仕様</p>
-      <p class="field-body">{{Z2: 構図、図の要素と関係、素材の種類。視覚素材がなければ「視覚素材なし」}}</p>
+      <p class="field-body">{{Z2: 構図、図の要素と関係、素材の種類と作成・入手方法。視覚素材がなければ「視覚素材なし」}}</p>
 
       <p class="field-label">画像生成プロンプト</p>
       <pre class="prompt">{{イラスト・図を生成する場合の英語プロンプト＋共通スタイル文字列。不要ならこの欄を削除}}</pre>
@@ -361,10 +363,11 @@
       <p class="field-label">表・グラフの仕様</p>
       <p class="field-note">使う場合は種類、配置ゾーン、行・列または軸・系列、対象期間、単位、表示注釈を記す。各セル・プロットに必要な値と出典を下表へ記入する。</p>
       <p class="field-body">{{種類／ゾーン／行・列または軸・系列／対象期間／単位／表示注釈。使わない場合はこの欄と下表を削除}}</p>
+      <!-- 未提供の値・単位・出典は推測せず、該当セルの先頭に status-pending を付けて必要な情報を具体的に書く。 -->
       <table class="content-table">
         <thead><tr><th>項目・位置</th><th>値</th><th>単位・注釈</th><th>出典</th></tr></thead>
         <tbody>
-          <tr><td>{{行×列のセル、または系列×横軸の点}}</td><td>{{値。不明なら「要確認」}}</td><td>{{単位・注釈}}</td><td>{{資料名・作成者・日付・URLやページ等。不明なら「要確認」}}</td></tr>
+          <tr><td>{{行×列のセル、または系列×横軸の点}}</td><td>{{値、または必要な値と集計条件}}</td><td>{{単位・注釈、または必要な定義}}</td><td>{{資料名・作成者・日付・URLやページ等、または必要な出典}}</td></tr>
         </tbody>
       </table>
 
@@ -377,8 +380,15 @@
       <p class="field-label">素材の準備事項</p>
       <p class="field-body">{{写真・ロゴ・図版など、必要な素材と入手・作成方法。不要なら「なし」}}</p>
 
-      <p class="field-label">未確定事項</p>
-      <p class="field-body">{{要確認の文言・値・出典と確認先。なければ「なし」}}</p>
+      <div class="open-items">
+        <h3>未確定事項</h3>
+        <!-- 該当する行だけ残す。確認済みの行は本文・図表の表示と一緒に削除し、末尾一覧も更新する。 -->
+        <ul>
+          <li><span class="status status-proposal">〖仮案〗</span>{{仮置きした文言・構成、確認すること}}<div class="item-detail">確認先: {{担当者または資料。不明なら「確認先未定」}}／資料作成への影響: {{影響}}</div></li>
+          <li><span class="status status-pending">〖要確認〗</span>{{必要な事実・値・出典と対象ゾーン}}<div class="item-detail">確認先: {{担当者または資料。不明なら「確認先未定」}}／資料作成への影響: {{影響}}</div></li>
+        </ul>
+        <!-- 未確定事項がなければ ul を削除し、<p>なし</p>とする。 -->
+      </div>
     </div>
   </section>
   <!-- ============================================================
@@ -565,8 +575,8 @@
       </div>
   -->
 
-  <!-- 全スライドの未確認事項だけを載せる。確認済みの行は削除する。
-       未確認事項がゼロなら表を外して「未確認事項はありません。」と記す。 -->
+  <!-- 全スライドの未確認事項だけを載せる。各行の内容は該当スライドの未確定事項と一致させる。
+       確認済みの行は削除し、未確認事項がゼロなら表を外して「未確認事項はありません。」と記す。 -->
   <section class="open-summary" aria-labelledby="open-summary-title">
     <h2 id="open-summary-title">未確認事項一覧</h2>
     <p>確認が必要な情報と、資料作成への影響をスライド別に示します。</p>
