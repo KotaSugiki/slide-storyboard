@@ -81,6 +81,27 @@
   .content-table th:first-child, .content-table td:first-child{ white-space:nowrap; }
   .zone-id{ font-weight:700; color:var(--accent); margin-right:0.35rem; }
 
+  .status{
+    display:inline-block; font-size:.76rem; font-weight:700; white-space:nowrap;
+    border-radius:4px; padding:0 .3rem; margin-right:.25rem;
+  }
+  .status-proposal{ color:#775014; background:#fff0c9; }
+  .status-pending{ color:#a33b2b; background:#fde8e3; }
+  .open-items{ margin-top:1.2rem; padding:1rem; border:1px solid var(--line); border-radius:6px; }
+  .open-items h3{ font-size:.9rem; margin:0 0 .5rem; }
+  .open-items ul{ margin:0; padding-left:1.3rem; font-size:.85rem; line-height:1.7; }
+  .open-items li + li{ margin-top:.5rem; }
+  .open-items .item-detail{ color:var(--muted); }
+
+  .open-summary{ background:var(--card); border:1px solid var(--line); border-radius:10px; padding:1.5rem; }
+  .open-summary h2{ font-size:1.2rem; margin:0 0 .5rem; }
+  .open-summary p{ font-size:.86rem; color:var(--muted); }
+  .open-summary-table{ overflow-x:auto; }
+  .open-summary table{ width:100%; border-collapse:collapse; font-size:.86rem; line-height:1.6; }
+  .open-summary th,.open-summary td{ border-bottom:1px solid var(--line); padding:.7rem .6rem; text-align:left; vertical-align:top; }
+  .open-summary th{ white-space:nowrap; }
+  .open-summary a{ color:var(--accent); }
+
   pre.prompt{
     background:#1e1e1e;
     color:#e8e6e1;
@@ -300,11 +321,14 @@
        下の例は layout-left-text-right-visual のワイヤーフレーム。
        他プリセットのワイヤーフレームHTMLは、このコメントブロックの下にある
        「プリセット別 .zone 構成の例」を参照して組み替える。
+       仮案の文言の直前には <span class="status status-proposal">〖仮案〗</span>、
+       確認必須の項目には <span class="status status-pending">〖要確認〗</span> を付ける。
+       確認済みの項目には表示を付けず、一覧からも除く。
        完成HTMLでは {{...}} をすべて実際の内容に置き換える。
        不明な事実は「要確認」、提案した文言は「仮案」と表示し、
        出典や数値を創作しない。使わない欄と表の行は削除する。
        ============================================================ -->
-  <section class="slide-card">
+  <section class="slide-card" id="slide-{{番号}}">
     <div>
       <div class="wireframe layout-left-text-right-visual">
         <div class="zone text"><span class="zone-id">Z1</span>本文</div>
@@ -540,6 +564,23 @@
         <div class="action-column"><div class="zone heading">期限・確認</div><div class="zone answer">いつ・誰と確認</div></div>
       </div>
   -->
+
+  <!-- 全スライドの未確認事項だけを載せる。確認済みの行は削除する。
+       未確認事項がゼロなら表を外して「未確認事項はありません。」と記す。 -->
+  <section class="open-summary" aria-labelledby="open-summary-title">
+    <h2 id="open-summary-title">未確認事項一覧</h2>
+    <p>確認が必要な情報と、資料作成への影響をスライド別に示します。</p>
+    <div class="open-summary-table">
+      <table>
+        <thead><tr><th>対象</th><th>区分</th><th>確認する情報</th><th>確認先</th><th>資料作成への影響</th></tr></thead>
+        <tbody>
+          <tr><td><a href="#slide-{{番号}}">Slide {{番号}}</a></td><td><span class="status status-pending">〖要確認〗</span></td><td>{{確認する具体情報}}</td><td>{{担当者または資料。不明なら「確認先未定」}}</td><td>{{影響}}</td></tr>
+          <tr><td><a href="#slide-{{番号}}">Slide {{番号}}</a></td><td><span class="status status-proposal">〖仮案〗</span></td><td>{{仮置きした文言・構成}}</td><td>{{レビューする担当者。不明なら「確認先未定」}}</td><td>{{影響}}</td></tr>
+          <!-- スライド内の未確認事項と同じ項目だけを残す。 -->
+        </tbody>
+      </table>
+    </div>
+  </section>
 
 </body>
 </html>
