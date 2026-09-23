@@ -74,6 +74,12 @@
     margin:1rem 0 0.3rem;
   }
   .field-body{ font-size:0.9rem; line-height:1.75; margin:0; }
+  .field-note{ color:var(--muted); font-size:0.78rem; line-height:1.6; margin:0.15rem 0 0.5rem; }
+  .content-table{ width:100%; border-collapse:collapse; font-size:0.85rem; line-height:1.6; }
+  .content-table th, .content-table td{ border:1px solid var(--line); padding:0.45rem 0.6rem; text-align:left; vertical-align:top; overflow-wrap:anywhere; }
+  .content-table th{ background:#f5f1ec; font-weight:600; }
+  .content-table th:first-child, .content-table td:first-child{ white-space:nowrap; }
+  .zone-id{ font-weight:700; color:var(--accent); margin-right:0.35rem; }
 
   .status{
     display:inline-block; font-size:.76rem; font-weight:700; white-space:nowrap;
@@ -113,6 +119,7 @@
      レイアウト・ワイヤーフレーム
      .wireframe が 16:9 の枠。中に .zone.text / .zone.visual を並べる。
      並べ方はプリセットごとの .layout-* クラスで切り替える。
+     各表示領域に Z1、Z2…を表示し、右側の完成文言・素材仕様と対応させる。
      ================================================================== */
   .wireframe{
     aspect-ratio:16/9;
@@ -317,42 +324,70 @@
        仮案の文言の直前には <span class="status status-proposal">〖仮案〗</span>、
        確認必須の項目には <span class="status status-pending">〖要確認〗</span> を付ける。
        確認済みの項目には表示を付けず、一覧からも除く。
+       完成HTMLでは {{...}} をすべて実際の内容に置き換える。
+       不明な事実は「要確認」、提案した文言は「仮案」と表示し、
+       出典や数値を創作しない。使わない欄と表の行は削除する。
        ============================================================ -->
   <section class="slide-card" id="slide-{{番号}}">
     <div>
       <div class="wireframe layout-left-text-right-visual">
-        <div class="zone text">テキスト<br>(タイトル・キーメッセージ)</div>
-        <div class="zone visual">イラスト</div>
+        <div class="zone text"><span class="zone-id">Z1</span>本文</div>
+        <div class="zone visual"><span class="zone-id">Z2</span>図・イラスト</div>
       </div>
       <p class="wireframe-caption">layout-left-text-right-visual</p>
     </div>
     <div>
       <span class="slide-no">Slide {{番号}}</span>
       <h2 class="slide-title">{{タイトル}}</h2>
-      <div class="key-message">{{キーメッセージ}}</div>
+      <div class="key-message">{{キーメッセージ。構成上の要約。表示する場合は下の完成文言にも記載}}</div>
 
-      <p class="field-label">構図</p>
-      <p class="field-body">{{構図の説明。視覚要素なしのスライドは「なし」}}</p>
+      <p class="field-label">スライドに載せる完成文言・配置</p>
+      <p class="field-note">各行がワイヤーフレームの表示領域に対応。タイトル、本文、箇条書き、図中ラベル、表の見出し、軸名、凡例、表示注釈をすべて記載する。</p>
+      <table class="content-table">
+        <thead><tr><th>ゾーン</th><th>載せる文言</th></tr></thead>
+        <tbody>
+          <tr><td>共通タイトル</td><td>{{スライドに表示するタイトルの完成文言}}</td></tr>
+          <tr><td>Z1 本文</td><td>{{見出しの完成文言}}<br>{{本文の完成文言。箇条書きは各項目を順番に記載}}</td></tr>
+          <tr><td>Z2 図・イラスト</td><td>{{図中ラベル・文字の完成文言。文字を載せない場合は「表示文言なし」}}</td></tr>
+        </tbody>
+      </table>
 
-      <p class="field-label">画像生成プロンプト / 表・グラフ構成</p>
-      <pre class="prompt">{{英語プロンプト(+共通スタイル文字列) または 表・グラフの行列・軸構成}}</pre>
+      <p class="field-label">視覚素材の仕様</p>
+      <p class="field-body">{{Z2: 構図、図の要素と関係、素材の種類。視覚素材がなければ「視覚素材なし」}}</p>
 
-      <p class="field-label">備考</p>
-      <p class="field-body">{{伝えたいことのメモ}}</p>
+      <p class="field-label">画像生成プロンプト</p>
+      <pre class="prompt">{{イラスト・図を生成する場合の英語プロンプト＋共通スタイル文字列。不要ならこの欄を削除}}</pre>
 
-      <!-- 未確認事項がないスライドでは、この .open-items 全体を削除する。 -->
-      <div class="open-items">
-        <h3>未確認事項</h3>
-        <ul>
-          <li><span class="status status-pending">〖要確認〗</span>{{確認する具体情報}}<br><span class="item-detail">確認先: {{担当者または資料。不明なら「確認先未定」}}／資料作成への影響: {{影響}}</span></li>
-          <li><span class="status status-proposal">〖仮案〗</span>{{仮置きした文言・構成}}<br><span class="item-detail">確認先: {{レビューする担当者。不明なら「確認先未定」}}／資料作成への影響: {{影響}}</span></li>
-          <!-- 該当する区分・項目の li だけを残す。 -->
-        </ul>
-      </div>
+      <p class="field-label">表・グラフの仕様</p>
+      <p class="field-note">使う場合は種類、配置ゾーン、行・列または軸・系列、対象期間、単位、表示注釈を記す。各セル・プロットに必要な値と出典を下表へ記入する。</p>
+      <p class="field-body">{{種類／ゾーン／行・列または軸・系列／対象期間／単位／表示注釈。使わない場合はこの欄と下表を削除}}</p>
+      <table class="content-table">
+        <thead><tr><th>項目・位置</th><th>値</th><th>単位・注釈</th><th>出典</th></tr></thead>
+        <tbody>
+          <tr><td>{{行×列のセル、または系列×横軸の点}}</td><td>{{値。不明なら「要確認」}}</td><td>{{単位・注釈}}</td><td>{{資料名・作成者・日付・URLやページ等。不明なら「要確認」}}</td></tr>
+        </tbody>
+      </table>
+
+      <p class="field-label">発表者向け補足</p>
+      <p class="field-body">{{口頭で話す補足。スライドに表示する文言はここだけに置かない}}</p>
+
+      <p class="field-label">出典・根拠</p>
+      <p class="field-body">{{主張・引用・図版の出典と該当箇所。不要なら「該当なし」}}</p>
+
+      <p class="field-label">素材の準備事項</p>
+      <p class="field-body">{{写真・ロゴ・図版など、必要な素材と入手・作成方法。不要なら「なし」}}</p>
+
+      <p class="field-label">未確定事項</p>
+      <p class="field-body">{{要確認の文言・値・出典と確認先。なければ「なし」}}</p>
     </div>
   </section>
   <!-- ============================================================
        ここまでを1スライド分として複製する
+       テキスト中心: text-only に変え、Z1に見出し・段落・箇条書きを記す。
+       図中心: 図の領域に番号を振り、図中ラベルを完成文言欄、
+       要素・矢印・構図を視覚素材の仕様欄に記す。
+       表・グラフ中心: 表やプロットにも番号を振り、行列・軸・凡例の
+       表示文言を完成文言欄、全セル・プロットの値と出典を仕様表に記す。
        ============================================================ -->
 
   <!--
