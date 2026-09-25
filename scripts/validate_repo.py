@@ -166,17 +166,20 @@ def check_skill_install(errors: list[str]) -> None:
         env = os.environ.copy()
         env.update({
             "HOME": str(temp_root),
+            "USERPROFILE": str(temp_root),
             "XDG_CONFIG_HOME": str(temp_root / "config"),
             "NPM_CONFIG_CACHE": str(temp_root / "npm-cache"),
+            "GITHUB_WORKSPACE": str(temp_source),
+            "RUNNER_TEMP": str(temp_root / "runner-temp"),
             "CI": "1",
         })
         commands = (
             ([npx, "--yes", "skills", "add", ".", "--list"], "skill recognition"),
-            ([npx, "--yes", "skills", "add", ".", "--skill", "slide-storyboard", "--agent", "codex", "--copy", "--yes"], "Codex copy install"),
+            ([npx, "--yes", "skills", "add", ".", "--skill", "slide-storyboard", "--agent", "codex", "--copy", "--global", "--yes"], "Codex global copy install"),
         )
         for command, label in commands:
             try:
-                result = subprocess.run(command, cwd=temp_source, env=env, capture_output=True, text=True, check=False, timeout=180)
+                result = subprocess.run(command, cwd=temp_source, env=env, capture_output=True, text=True, encoding="utf-8", errors="replace", check=False, timeout=180)
             except subprocess.TimeoutExpired:
                 errors.append(f"{label} timed out after 180 seconds")
                 return
