@@ -1,0 +1,32 @@
+name: 改善提案
+description: スキルやテンプレートの改善を提案する
+title: "[提案] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 解決したいこと
+      description: 現在の困りごとや利用場面を説明してください。
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 提案内容
+      description: 期待する動作や変更案を説明してください。
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 検討した代替案
+  - type: checkboxes
+    id: acknowledgements
+    attributes:
+      label: 確認事項
+      options:
+        - label: 既存 Issue を検索しました。
+          required: true
+        - label: 機密情報を記載していません。
+          required: true

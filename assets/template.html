@@ -315,18 +315,18 @@
 
   <h1>{{デッキタイトル}}</h1>
   <!-- イラストを使わないデッキでは次の行を削除する。 -->
-  <p class="deck-sub">共通イラストスタイル: <code>{{共通スタイル文字列。未承認なら〖仮案〗を付ける}}</code></p>
+  <p class="deck-sub">共通イラストスタイル: <code>{{共通スタイル文字列。未承認なら【仮案】を付ける}}</code></p>
 
   <!-- ============================================================
        スライドカード1枚分。SKILL.md の手順6でスライドの枚数だけ複製して埋める。
        下の例は layout-left-text-right-visual のワイヤーフレーム。
        他プリセットのワイヤーフレームHTMLは、このコメントブロックの下にある
        「プリセット別 .zone 構成の例」を参照して組み替える。
-       仮案の文言の直前には <span class="status status-proposal">〖仮案〗</span>、
-       確認必須の項目には <span class="status status-pending">〖要確認〗</span> を付ける。
+       仮案の文言の直前には <span class="status status-proposal">【仮案】</span>、
+       確認必須の項目には <span class="status status-pending">【要確認】</span> を付ける。
        確認済みの項目には表示を付けず、一覧からも除く。
        完成HTMLでは {{...}} をすべて実際の内容に置き換える。
-       不明な事実は「〖要確認〗」、提案した文言は「〖仮案〗」と表示し、
+       不明な事実は「【要確認】」、提案した文言は「【仮案】」と表示し、
        出典や数値を創作しない。使わない欄と表の行は削除する。
        ============================================================ -->
   <section class="slide-card" id="slide-{{番号}}">
@@ -384,8 +384,8 @@
         <h3>未確定事項</h3>
         <!-- 該当する行だけ残す。確認済みの行は本文・図表の表示と一緒に削除し、末尾一覧も更新する。 -->
         <ul>
-          <li><span class="status status-proposal">〖仮案〗</span>{{仮置きした文言・構成、確認すること}}<div class="item-detail">確認先: {{担当者または資料。不明なら「確認先未定」}}／資料作成への影響: {{影響}}</div></li>
-          <li><span class="status status-pending">〖要確認〗</span>{{必要な事実・値・出典と対象ゾーン}}<div class="item-detail">確認先: {{担当者または資料。不明なら「確認先未定」}}／資料作成への影響: {{影響}}</div></li>
+          <li><span class="status status-proposal">【仮案】</span>{{仮置きした文言・構成、確認すること}}<div class="item-detail">確認先: {{担当者または資料。不明なら「確認先未定」}}／資料作成への影響: {{影響}}</div></li>
+          <li><span class="status status-pending">【要確認】</span>{{必要な事実・値・出典と対象ゾーン}}<div class="item-detail">確認先: {{担当者または資料。不明なら「確認先未定」}}／資料作成への影響: {{影響}}</div></li>
         </ul>
         <!-- 未確定事項がなければ ul を削除し、<p>なし</p>とする。 -->
       </div>
@@ -584,8 +584,8 @@
       <table>
         <thead><tr><th>対象</th><th>区分</th><th>確認する情報</th><th>確認先</th><th>資料作成への影響</th></tr></thead>
         <tbody>
-          <tr><td><a href="#slide-{{番号}}">Slide {{番号}}</a></td><td><span class="status status-pending">〖要確認〗</span></td><td>{{確認する具体情報}}</td><td>{{担当者または資料。不明なら「確認先未定」}}</td><td>{{影響}}</td></tr>
-          <tr><td><a href="#slide-{{番号}}">Slide {{番号}}</a></td><td><span class="status status-proposal">〖仮案〗</span></td><td>{{仮置きした文言・構成}}</td><td>{{レビューする担当者。不明なら「確認先未定」}}</td><td>{{影響}}</td></tr>
+          <tr><td><a href="#slide-{{番号}}">Slide {{番号}}</a></td><td><span class="status status-pending">【要確認】</span></td><td>{{確認する具体情報}}</td><td>{{担当者または資料。不明なら「確認先未定」}}</td><td>{{影響}}</td></tr>
+          <tr><td><a href="#slide-{{番号}}">Slide {{番号}}</a></td><td><span class="status status-proposal">【仮案】</span></td><td>{{仮置きした文言・構成}}</td><td>{{レビューする担当者。不明なら「確認先未定」}}</td><td>{{影響}}</td></tr>
           <!-- スライド内の未確認事項と同じ項目だけを残す。 -->
         </tbody>
       </table>
